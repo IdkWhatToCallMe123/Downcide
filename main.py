@@ -142,21 +142,10 @@ class downloadSheet:
 
 #--------
 
-class confimationSheet:
-    def resetBs():
-        '''
-        confimationSheet.title.value = "Downloading"
-        confimationSheet.downloadProgressBar.value = None
-        confimationSheet.downloadProgressLabel.value = "Preparing..."
-        confimationSheet.doneButton.disabled = True
-        confimationSheet.bs.open = False
-        
-        downloadSheet.bs.update()
-        '''
-        
+class confimationSheet:        
     def openBs():
         confimationSheet.bs.open = True
-        
+          
         ydl_opts = {
             'logger': dlLogger(),
             'progress_hooks': [dlHook]
@@ -174,6 +163,7 @@ class confimationSheet:
             
             confimationSheet.Thumbnail.src = videoTumbnail
             confimationSheet.videoTitleText.value = videoTitle
+            confimationSheet.videoTitleText.tooltip = videoTitle
             confimationSheet.videoChannelText.value = videoChannel 
             
             mainPageControls.spinner.visible = False
@@ -198,6 +188,7 @@ class confimationSheet:
         
     videoTitleText = ft.Text("Title", size=24, width=340, max_lines=2, overflow=ft.TextOverflow.ELLIPSIS)    
     videoChannelText = ft.Text("Title", size=16, width=400, max_lines=1)    
+    videoLengthText = ft.Text("hello")
 
     cancelButton = ft.OutlinedButton("Cancel", on_click=lambda _: confimationSheet.closeBs())
     downloadButton = ft.FilledButton("Download", icon="download", on_click=lambda _: downloadVideo()) #download video    
@@ -214,7 +205,10 @@ class confimationSheet:
                 controls=[
                     ft.Row(spacing=18,
                         controls=[
-                            Thumbnail,                            
+                            ft.Stack(controls=[                                
+                            Thumbnail,  
+                            ft.Container(content=videoLengthText, alignment=ft.alignment.bottom_right),
+                                ]),                          
                             ft.Column(
                                 controls=[
                                     videoTitleText,
@@ -239,44 +233,47 @@ class confimationSheet:
 #----------------------
 
 class mainPageControls:
+    def resetUrlEntry(e):
+        mainPageControls.urlEntry.error_text = None
+        mainPageControls.urlEntry.update()
+    
+    
     spinner = ft.ProgressRing(width=20, height=20, visible=False)
-    urlEntry = ft.TextField(label="YouTube  URL", adaptive=adaptiveOnOff)
+    urlEntry = ft.TextField(label="YouTube  URL", adaptive=adaptiveOnOff, on_change=resetUrlEntry)
 
 
 def main(page: ft.Page):    
     def downLoadButtonClicked(e):
-        try:
-            downloadSheet.resetBs()
-            
-        except AssertionError:
-            pass
-            # This happens when the thing isn't open
-        
-        try:            
-            #page.open(confimationSheet.bs)
-            
-            #page.update()
-            confimationSheet.openBs()
-            
-            ydl_opts = {
-                'logger': dlLogger(),
-                'progress_hooks': [dlHook]
-            }
+        if "youtube.com" in mainPageControls.urlEntry.value:          
+            try:
+                downloadSheet.resetBs()
 
-                
-        except Exception as e:
-            #downloadSheet.resetBs()            
+            except AssertionError:
+                pass
+                # This happens when the thing isn't open
+
+            try:          
+                confimationSheet.openBs()
+
+            except Exception as e:
+                #downloadSheet.resetBs()            
+
+                if ("not a valid URL" in str(e)):
+                    #page.snack_bar = ft.SnackBar(ft.Text(f"Error: {e}"))
+                    page.snack_bar = ft.SnackBar("Your URL appears to invalid")
+                    page.snack_bar.open = True
+                    page.update()
+                else:
+                    print(e)
+                    errorMsgDialog.content=ft.Text(e, selectable=True)
+                    page.open(errorMsgDialog)
             
-            if ("not a valid URL" in str(e)):
-                #page.snack_bar = ft.SnackBar(ft.Text(f"Error: {e}"))
-                page.snack_bar = ft.SnackBar("Your URL appears to invalid")
-                page.snack_bar.open = True
-                page.update()
-            else:
-                print(e)
-                errorMsgDialog.content=ft.Text(e, selectable=True)
-                page.open(errorMsgDialog)
-               
+        else:
+            print("hello")
+            mainPageControls.urlEntry.error_text = "That is not a YouTube™ URL u stoopid"
+            mainPageControls.urlEntry.update()
+            
+    
     #--------------
     
     def closeDialog(e):

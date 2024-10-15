@@ -155,8 +155,7 @@ def main(page: ft.Page):
                 ydl.download(urlEntry.value)
                 
         except Exception as e:
-            downloadSheet.resetBs()
-            
+            downloadSheet.resetBs()            
             
             if ("not a valid URL" in str(e)):
                 #page.snack_bar = ft.SnackBar(ft.Text(f"Error: {e}"))
