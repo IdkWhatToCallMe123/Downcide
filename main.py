@@ -1,6 +1,7 @@
 import flet as ft
 import yt_dlp
 from yt_dlp.utils import download_range_func
+import datetime
 
 adaptiveOnOff = False
 
@@ -161,10 +162,23 @@ class confimationSheet:
             videoTitle = info_dict.get('title', None)
             videoChannel = info_dict.get('channel', None)
             
+            videoDuration = info_dict.get('duration', None)
+            videoDurationMinutes = str(datetime.timedelta(seconds=int(videoDuration)))
+            
+            # Lazy logic to remove the begining zeroes if the video is shorter than 10 minutes or 
+            # 1 hour respectively
+            if videoDurationMinutes[0:3] == "0:0":
+                videoDurationMinutes = videoDurationMinutes[3:]
+            
+            elif videoDurationMinutes[0:2] == "0:":
+                videoDurationMinutes = videoDurationMinutes[2:]
+            
+            
             confimationSheet.Thumbnail.src = videoTumbnail
             confimationSheet.videoTitleText.value = videoTitle
             confimationSheet.videoTitleText.tooltip = videoTitle
             confimationSheet.videoChannelText.value = videoChannel 
+            confimationSheet.videoDurationText.value = videoDurationMinutes
             
             mainPageControls.spinner.visible = False
             mainPageControls.spinner.update()
@@ -188,7 +202,7 @@ class confimationSheet:
         
     videoTitleText = ft.Text("Title", size=24, width=340, max_lines=2, overflow=ft.TextOverflow.ELLIPSIS)    
     videoChannelText = ft.Text("Title", size=16, width=400, max_lines=1)    
-    videoLengthText = ft.Text("hello")
+    videoDurationText = ft.Text("Unknown")
 
     cancelButton = ft.OutlinedButton("Cancel", on_click=lambda _: confimationSheet.closeBs())
     downloadButton = ft.FilledButton("Download", icon="download", on_click=lambda _: downloadVideo()) #download video    
@@ -207,7 +221,9 @@ class confimationSheet:
                         controls=[
                             ft.Stack(controls=[                                
                             Thumbnail,  
-                            ft.Container(content=videoLengthText, alignment=ft.alignment.bottom_right),
+                            ft.Container(margin=8, padding=2, border_radius=4, alignment=ft.alignment.bottom_right, right=0, bottom=0, bgcolor="#cc000000",
+                                         content=videoDurationText,
+                                ),
                                 ]),                          
                             ft.Column(
                                 controls=[
@@ -269,7 +285,6 @@ def main(page: ft.Page):
                     page.open(errorMsgDialog)
             
         else:
-            print("hello")
             mainPageControls.urlEntry.error_text = "That is not a YouTube™ URL u stoopid"
             mainPageControls.urlEntry.update()
             
