@@ -253,13 +253,8 @@ class mainPageControls:
         mainPageControls.urlEntry.error_text = None
         mainPageControls.urlEntry.update()
     
-    
-    spinner = ft.ProgressRing(width=20, height=20, visible=False)
-    urlEntry = ft.TextField(label="YouTube  URL", adaptive=adaptiveOnOff, on_change=resetUrlEntry)
-
-
-def main(page: ft.Page):    
-    def downLoadButtonClicked(e):
+    # when the download button is clicked or if the user presses enter while in the URL entry
+    def downlaodAction(e):
         if "youtube.com" in mainPageControls.urlEntry.value:          
             try:
                 downloadSheet.resetBs()
@@ -272,43 +267,45 @@ def main(page: ft.Page):
                 confimationSheet.openBs()
 
             except Exception as e:
-                #downloadSheet.resetBs()            
-
-                if ("not a valid URL" in str(e)):
-                    #page.snack_bar = ft.SnackBar(ft.Text(f"Error: {e}"))
-                    page.snack_bar = ft.SnackBar("Your URL appears to invalid")
-                    page.snack_bar.open = True
-                    page.update()
-                else:
-                    print(e)
-                    errorMsgDialog.content=ft.Text(e, selectable=True)
-                    page.open(errorMsgDialog)
+                mainPageControls.errorMsgDialog.content=ft.Text(e, selectable=True)
+                mainPageControls.errorMsgDialog.open = True
+                mainPageControls.errorMsgDialog.update()
+                
+                mainPageControls.spinner.visible = False
+                mainPageControls.spinner.update()                                    
             
         else:
             mainPageControls.urlEntry.error_text = "That is not a YouTube™ URL u stoopid"
             mainPageControls.urlEntry.update()
-            
     
-    #--------------
+
+    def closeErrorMsgDialog(e):
+        mainPageControls.errorMsgDialog.open = False  
+        mainPageControls.errorMsgDialog.update()
+     
     
-    def closeDialog(e):
-        page.close(errorMsgDialog)  
-        
-        
     errorMsgDialog = ft.AlertDialog(
         modal=True,
         title=ft.Text("Error:"),
         content=ft.Text("Details"),
         actions=[
-            ft.TextButton("Close", on_click=closeDialog),
+            ft.TextButton("Close", on_click=closeErrorMsgDialog),
         ],
         actions_alignment=ft.MainAxisAlignment.END,
     )
     
-    #-------------
+    
+    
+    spinner = ft.ProgressRing(width=20, height=20, visible=False)
+    urlEntry = ft.TextField(label="YouTube  URL", adaptive=adaptiveOnOff, on_change=resetUrlEntry, on_submit=downlaodAction) # todo: on submit
+
+
+def main(page: ft.Page):  
+    #-----------------
     # I have to add this is the page for whatever reason
     page.add(downloadSheet.bs)
-    page.add(confimationSheet.bs)
+    page.add(confimationSheet.bs)    
+    page.add(mainPageControls.errorMsgDialog)
     
     #==============================================
     # Here is the actuall main page
@@ -328,7 +325,7 @@ def main(page: ft.Page):
                     "Download", 
                     icon="download", 
                     adaptive=adaptiveOnOff,
-                    on_click=downLoadButtonClicked
+                    on_click=mainPageControls.downlaodAction
                 ),
                 mainPageControls.spinner
                 ]                
